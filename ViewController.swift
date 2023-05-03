@@ -9,6 +9,8 @@ import UIKit
 
 class ViewController: UIViewController {
     
+    let coinManager = CoinManager()
+    
     private lazy var mainStackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .vertical
@@ -16,7 +18,7 @@ class ViewController: UIViewController {
         return stack
     }()
     
-    private lazy var byteCoinLabel: UILabel = {
+    private lazy var bytcoinLabel: UILabel = {
         let label = UILabel()
         label.text = "ByteCoin"
         label.textAlignment = .center
@@ -64,7 +66,7 @@ class ViewController: UIViewController {
         return label
     }()
     
-    private lazy var pickerView: UIPickerView = {
+    private lazy var currencyPicker: UIPickerView = {
         let picker = UIPickerView()
         picker.translatesAutoresizingMaskIntoConstraints = false
         return picker
@@ -72,6 +74,9 @@ class ViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        currencyPicker.dataSource = self
+        currencyPicker.delegate = self
+        
         view.backgroundColor = UIColor(named: "Background Color")
         subviews()
         setupConstraints()
@@ -79,8 +84,8 @@ class ViewController: UIViewController {
     
     private func subviews() {
         view.addSubview(mainStackView)
-        view.addSubview(pickerView)
-        mainStackView.addArrangedSubview(byteCoinLabel)
+        view.addSubview(currencyPicker)
+        mainStackView.addArrangedSubview(bytcoinLabel)
         mainStackView.addArrangedSubview(coinStackView)
         coinStackView.addArrangedSubview(coinImageView)
         coinStackView.addArrangedSubview(resultLabel)
@@ -93,11 +98,11 @@ class ViewController: UIViewController {
             mainStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             mainStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             
-            byteCoinLabel.topAnchor.constraint(equalTo: mainStackView.topAnchor),
-            byteCoinLabel.heightAnchor.constraint(equalToConstant: 60),
-            byteCoinLabel.centerXAnchor.constraint(equalTo: mainStackView.centerXAnchor),
+            bytcoinLabel.topAnchor.constraint(equalTo: mainStackView.topAnchor),
+            bytcoinLabel.heightAnchor.constraint(equalToConstant: 60),
+            bytcoinLabel.centerXAnchor.constraint(equalTo: mainStackView.centerXAnchor),
             
-            coinStackView.topAnchor.constraint(equalTo: byteCoinLabel.bottomAnchor, constant: 25),
+            coinStackView.topAnchor.constraint(equalTo: bytcoinLabel.bottomAnchor, constant: 25),
             coinStackView.leadingAnchor.constraint(equalTo: mainStackView.leadingAnchor, constant: 10),
             coinStackView.trailingAnchor.constraint(equalTo: mainStackView.trailingAnchor, constant: -10),
             coinStackView.heightAnchor.constraint(equalToConstant: 80),
@@ -105,11 +110,31 @@ class ViewController: UIViewController {
             coinImageView.widthAnchor.constraint(equalToConstant: 80),
             coinImageView.heightAnchor.constraint(equalToConstant: 80),
          
-            pickerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            pickerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            pickerView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
-            pickerView.heightAnchor.constraint(equalToConstant: 216)
+            currencyPicker.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            currencyPicker.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            currencyPicker.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            currencyPicker.heightAnchor.constraint(equalToConstant: 216)
         ])
     }
 }
-            
+
+extension ViewController: UIPickerViewDataSource {
+    func numberOfComponents(in pickerView: UIPickerView) -> Int {
+        return 1
+    }
+    
+    func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
+        return coinManager.currencyArray.count
+    }
+}
+
+extension ViewController: UIPickerViewDelegate {
+    func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
+        return coinManager.currencyArray[row]
+    }
+    
+    func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
+        let selectedCurrency = coinManager.currencyArray[row]
+        coinManager.getCoinPrice(for: selectedCurrency)
+    }
+}
