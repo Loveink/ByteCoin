@@ -9,11 +9,10 @@ import UIKit
 
 class ViewController: UIViewController {
     
-    let coinManager = CoinManager()
+    var coinManager = CoinManager()
     
-    private lazy var mainStackView: UIStackView = {
-        let stack = UIStackView()
-        stack.axis = .vertical
+    private lazy var mainView: UIView = {
+        let stack = UIView()
         stack.translatesAutoresizingMaskIntoConstraints = false
         return stack
     }()
@@ -32,7 +31,9 @@ class ViewController: UIViewController {
         let stack = UIStackView()
         stack.layer.cornerRadius = 40
         stack.axis = .horizontal
+        stack.contentMode = .scaleToFill
         stack.alignment = .center
+        stack.distribution = .fill
         stack.spacing = 10
         stack.backgroundColor = .placeholderText
         stack.translatesAutoresizingMaskIntoConstraints = false
@@ -51,6 +52,7 @@ class ViewController: UIViewController {
     private lazy var resultLabel: UILabel = {
         let label = UILabel()
         label.text = "..."
+        label.contentMode = .left
         label.font = UIFont.systemFont(ofSize: 25, weight: .regular)
         label.textColor = .white
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -60,6 +62,7 @@ class ViewController: UIViewController {
     private lazy var currencyLabel: UILabel = {
         let label = UILabel()
         label.text = "USD"
+        label.contentMode = .left
         label.font = UIFont.systemFont(ofSize: 25, weight: .regular)
         label.textColor = .white
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -76,6 +79,7 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         currencyPicker.dataSource = self
         currencyPicker.delegate = self
+        coinManager.delegate = self
         
         view.backgroundColor = UIColor(named: "Background Color")
         subviews()
@@ -83,33 +87,39 @@ class ViewController: UIViewController {
     }
     
     private func subviews() {
-        view.addSubview(mainStackView)
+        view.addSubview(mainView)
         view.addSubview(currencyPicker)
-        mainStackView.addArrangedSubview(bytcoinLabel)
-        mainStackView.addArrangedSubview(coinStackView)
+        mainView.addSubview(bytcoinLabel)
+        mainView.addSubview(coinStackView)
         coinStackView.addArrangedSubview(coinImageView)
         coinStackView.addArrangedSubview(resultLabel)
         coinStackView.addArrangedSubview(currencyLabel)
     }
     
     func setupConstraints() {
+    
         NSLayoutConstraint.activate([
-            mainStackView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
-            mainStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            mainStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            mainView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
+            mainView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            mainView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             
-            bytcoinLabel.topAnchor.constraint(equalTo: mainStackView.topAnchor),
+            bytcoinLabel.topAnchor.constraint(equalTo: mainView.topAnchor),
             bytcoinLabel.heightAnchor.constraint(equalToConstant: 60),
-            bytcoinLabel.centerXAnchor.constraint(equalTo: mainStackView.centerXAnchor),
+            bytcoinLabel.centerXAnchor.constraint(equalTo: mainView.centerXAnchor),
             
             coinStackView.topAnchor.constraint(equalTo: bytcoinLabel.bottomAnchor, constant: 25),
-            coinStackView.leadingAnchor.constraint(equalTo: mainStackView.leadingAnchor, constant: 10),
-            coinStackView.trailingAnchor.constraint(equalTo: mainStackView.trailingAnchor, constant: -10),
+            coinStackView.leadingAnchor.constraint(equalTo: coinImageView.leadingAnchor, constant: 10),
+            coinStackView.trailingAnchor.constraint(equalTo: currencyLabel.trailingAnchor, constant: 10),
             coinStackView.heightAnchor.constraint(equalToConstant: 80),
-            
+            coinStackView.centerXAnchor.constraint(equalTo: mainView.centerXAnchor),
+           
+      
             coinImageView.widthAnchor.constraint(equalToConstant: 80),
             coinImageView.heightAnchor.constraint(equalToConstant: 80),
-         
+            resultLabel.leadingAnchor.constraint(equalTo: coinImageView.trailingAnchor, constant: 10),
+            currencyLabel.leadingAnchor.constraint(equalTo: resultLabel.trailingAnchor, constant: 10),
+            currencyLabel.widthAnchor.constraint(equalToConstant: 60),
+            
             currencyPicker.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             currencyPicker.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             currencyPicker.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
@@ -137,4 +147,17 @@ extension ViewController: UIPickerViewDelegate {
         let selectedCurrency = coinManager.currencyArray[row]
         coinManager.getCoinPrice(for: selectedCurrency)
     }
+}
+
+extension ViewController: CoinManagerDelegate {
+    func didUpdatePrice(price: String, currency: String) {
+            DispatchQueue.main.async {
+                self.resultLabel.text = price
+                self.currencyLabel.text = currency
+            }
+        }
+        
+        func didFailWithError(error: Error) {
+            print(error)
+        }
 }
